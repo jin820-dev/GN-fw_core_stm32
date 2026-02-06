@@ -1,10 +1,14 @@
-# GN-fw_core
+# GN-fw_core_stm32
 
 Goldear Networks firmware core framework.
 
-STM32CubeIDE をベースにした再利用可能な組み込みファームウェア基盤テンプレートです。
+A reusable embedded firmware framework template built on STM32CubeIDE.
 
-レイヤ分離（app / drv / plat / utils）により、移植性・保守性・再利用性を重視しています。
+The project follows a clean layered architecture (app / drv / plat / utils) designed for portability, maintainability, and long-term reusability.
+
+Note:
+The architecture is hardware-agnostic.  
+Only the plat layer depends on the MCU/board, so it can be ported to other STM32 or MCUs easily.
 
 ## Features
 - Layered architecture
@@ -32,6 +36,13 @@ PowerShell:
 ```
 ### Build
 STM32CubeIDE で `.project` を Import → Build
+
+## Target Board (reference)
+This repository currently includes a ready-to-build configuration for:
+
+- STM32H723ZG Nucleo (STM32H7 series)
+- STM32CubeIDE project
+- HAL + FatFs enabled
 
 ## Requirements
 - STM32CubeIDE
