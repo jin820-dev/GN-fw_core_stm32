@@ -1,20 +1,20 @@
 /* USER CODE BEGIN Header */
 /**
  ******************************************************************************
-  * @file    user_diskio.c
-  * @brief   This file includes a diskio driver skeleton to be completed by the user.
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2026 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ * @file    user_diskio.c
+ * @brief   This file includes a diskio driver skeleton to be completed by the user.
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2026 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
  /* USER CODE END Header */
 
 #ifdef USE_OBSOLETE_USER_CODE_SECTION_0
@@ -73,64 +73,143 @@ Diskio_drvTypeDef  USER_Driver =
 
 /* Private functions ---------------------------------------------------------*/
 
-DSTATUS USER_initialize (BYTE pdrv)
+/**
+  * @brief  Initializes a Drive
+  * @param  pdrv: Physical drive number (0..)
+  * @retval DSTATUS: Operation status
+  */
+DSTATUS USER_initialize (
+	BYTE pdrv           /* Physical drive nmuber to identify the drive */
+)
 {
-    (void)pdrv;
-    return (sd_spi_init_card() == SD_OK) ? 0 : STA_NOINIT;
+  /* USER CODE BEGIN INIT */
+  (void)pdrv;
+
+  Stat = (sd_spi_init_card() == SD_OK) ? 0 : STA_NOINIT;
+  return Stat;
+  /* USER CODE END INIT */
 }
 
-DSTATUS USER_status (BYTE pdrv)
+/**
+  * @brief  Gets Disk Status
+  * @param  pdrv: Physical drive number (0..)
+  * @retval DSTATUS: Operation status
+  */
+DSTATUS USER_status (
+	BYTE pdrv       /* Physical drive number to identify the drive */
+)
 {
-    (void)pdrv;
-    return 0;
+  /* USER CODE BEGIN STATUS */
+  (void)pdrv;
+  return Stat;
+  /* USER CODE END STATUS */
 }
 
-DRESULT USER_read (BYTE pdrv, BYTE *buff, DWORD sector, UINT count)
+/**
+  * @brief  Reads Sector(s)
+  * @param  pdrv: Physical drive number (0..)
+  * @param  *buff: Data buffer to store read data
+  * @param  sector: Sector address (LBA)
+  * @param  count: Number of sectors to read (1..128)
+  * @retval DRESULT: Operation result
+  */
+DRESULT USER_read (
+	BYTE pdrv,      /* Physical drive nmuber to identify the drive */
+	BYTE *buff,     /* Data buffer to store read data */
+	DWORD sector,   /* Sector address in LBA */
+	UINT count      /* Number of sectors to read */
+)
 {
-    (void)pdrv;
+  /* USER CODE BEGIN READ */
+  (void)pdrv;
 
-    for (UINT i = 0; i < count; i++) {
-        if (sd_spi_read_block((uint32_t)sector + i, (uint8_t*)buff + (512U * i)) != SD_OK) {
-            return RES_ERROR;
-        }
+  if (Stat & STA_NOINIT) return RES_NOTRDY;
+
+  for (UINT i = 0; i < count; i++)
+  {
+    if (sd_spi_read_block((uint32_t)sector + i,
+                          (uint8_t*)buff + (512U * i)) != SD_OK)
+    {
+      return RES_ERROR;
     }
-    return RES_OK;
+  }
+  return RES_OK;
+  /* USER CODE END READ */
 }
 
-DRESULT USER_write (BYTE pdrv, const BYTE *buff, DWORD sector, UINT count)
+/**
+  * @brief  Writes Sector(s)
+  * @param  pdrv: Physical drive number (0..)
+  * @param  *buff: Data to be written
+  * @param  sector: Sector address (LBA)
+  * @param  count: Number of sectors to write (1..128)
+  * @retval DRESULT: Operation result
+  */
+#if _USE_WRITE == 1
+DRESULT USER_write (
+	BYTE pdrv,          /* Physical drive nmuber to identify the drive */
+	const BYTE *buff,   /* Data to be written */
+	DWORD sector,       /* Sector address in LBA */
+	UINT count          /* Number of sectors to write */
+)
 {
-    (void)pdrv;
+  /* USER CODE BEGIN WRITE */
+  (void)pdrv;
 
-    for (UINT i = 0; i < count; i++) {
-        if (sd_spi_write_block((uint32_t)sector + i, (const uint8_t*)buff + (512U * i)) != SD_OK) {
-            return RES_ERROR;
-        }
+  if (Stat & STA_NOINIT) return RES_NOTRDY;
+
+  for (UINT i = 0; i < count; i++)
+  {
+    if (sd_spi_write_block((uint32_t)sector + i,
+                           (const uint8_t*)buff + (512U * i)) != SD_OK)
+    {
+      return RES_ERROR;
     }
-    return RES_OK;
+  }
+  return RES_OK;
+  /* USER CODE END WRITE */
 }
+#endif /* _USE_WRITE == 1 */
 
-DRESULT USER_ioctl (BYTE pdrv, BYTE cmd, void *buff)
+/**
+  * @brief  I/O control operation
+  * @param  pdrv: Physical drive number (0..)
+  * @param  cmd: Control code
+  * @param  *buff: Buffer to send/receive control data
+  * @retval DRESULT: Operation result
+  */
+#if _USE_IOCTL == 1
+DRESULT USER_ioctl (
+	BYTE pdrv,      /* Physical drive nmuber (0..) */
+	BYTE cmd,       /* Control code */
+	void *buff      /* Buffer to send/receive control data */
+)
 {
-    (void)pdrv;
+  /* USER CODE BEGIN IOCTL */
+  (void)pdrv;
 
-    switch (cmd) {
+  if (Stat & STA_NOINIT) return RES_NOTRDY;
+
+  switch (cmd)
+  {
     case CTRL_SYNC:
-        return RES_OK;
+      return RES_OK;
 
     case GET_SECTOR_COUNT:
-        // とりあえず不明なら失敗でも良い（ただし容量取得系が動かない）
-        // 最小動作優先なら固定値でも可。後でCMD9/CSDで埋めるのが本筋。
-        return RES_PARERR;
+      return RES_PARERR;
 
     case GET_SECTOR_SIZE:
-        *(WORD*)buff = 512;
-        return RES_OK;
+      *(WORD*)buff = 512;
+      return RES_OK;
 
     case GET_BLOCK_SIZE:
-        *(DWORD*)buff = 1;
-        return RES_OK;
+      *(DWORD*)buff = 1;
+      return RES_OK;
 
     default:
-        return RES_PARERR;
-    }
+      return RES_PARERR;
+  }
+  /* USER CODE END IOCTL */
 }
+#endif /* _USE_IOCTL == 1 */
+
