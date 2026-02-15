@@ -13,6 +13,7 @@
 #include "app_logger.h"
 #include "drv_oled_i2c.h"
 #include "drv_sd.h"
+#include "drv_adc_trig_dma.h"
 #include "utils_log.h"
 #include "utils_sd_selftest.h"
 #include "plat_uart_stdio.h"
@@ -26,6 +27,8 @@
 // --- variable declaration ---
 bool logger_ok = false;
 bool fat_ok = false;
+bool iadc_ok = false;
+
 
 // --- functions ---
 void app_boot(void)
@@ -60,7 +63,7 @@ void app_boot(void)
     oled_update();
     
     
-    // 3) 追加の初期化があればここに集約していく
+    // 3) logger
     if (fat_ok == true) {
         if (logger_init() == LOGGER_OK) {
             LOG_INFO("BOOT", "logger init OK");
@@ -69,14 +72,26 @@ void app_boot(void)
             LOG_ERROR("BOOT", "logger init FAIL");
         }
     }
-    // adc_init();
+    // 4) internal ADC
+    if (fat_ok == true) {
+        if (drv_adc_trig_dma_init() == DRV_ADC_TRIG_DMA_OK) {
+            LOG_INFO("BOOT", "Internal ADC init OK");
+            iadc_ok = true;
+            drv_adc_trig_dma_start();
+        } else {
+            LOG_ERROR("BOOT", "Internal ADC init FAIL");
+        }
+    }
+
     // ...
 
-    LOG_INFO("BOOT", "POST: SD=%s FAT=%s LOGGER=%s OLED=%s",
+    LOG_INFO("BOOT", "POST: SD=%s FAT=%s LOGGER=%s OLED=%s IADC=%s",
              sd.sd_init_ok ? "OK" : "NG",
              sd.fatfs_ok? "OK" : "NG",
              logger_ok ? "OK" : "NG",
-             oled_is_available() ? "OK" : "NG");
+             oled_is_available() ? "OK" : "NG",
+             iadc_ok ? "OK" : "NG"
+             );
 
     LOG_INFO(TAG, "boot end");
 }
